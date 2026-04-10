@@ -1,5 +1,6 @@
 import LaboratoryBubbleChart from './LaboratoryBubbleChart'
 import LowestPriceProductsTable from './LowestPriceProductsTable'
+import AnalyticsKpis from './AnalyticsKpis'
 
 const Analytics = () => {
   return (
@@ -14,6 +15,8 @@ const Analytics = () => {
           Este bloque identifica que laboratorio concentra mas productos con el menor precio unitario disponible en cada comparativa.
         </p>
       </section>
+
+        <AnalyticsKpis />
 
         <LaboratoryBubbleChart />
 

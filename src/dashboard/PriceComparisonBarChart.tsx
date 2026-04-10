@@ -14,8 +14,8 @@ const PriceComparisonBarChart = () => {
       const key = item.nombreProducto
       const previous = minPriceByProduct.get(key)
 
-      if (previous === undefined || item.precioUnitario < previous) {
-        minPriceByProduct.set(key, item.precioUnitario)
+      if (previous === undefined || item.mejorPrecio < previous) {
+        minPriceByProduct.set(key, item.mejorPrecio)
       }
     })
 

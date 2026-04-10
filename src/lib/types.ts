@@ -1,10 +1,20 @@
 export type AnalysisItem = {
-  codigoProducto: string
+  // Identificador principal del producto dentro del resultado optimizado.
+  codigoBarra: string
+  // Codigo interno del producto segun el proveedor ganador.
+  codigoInternoProveedor: string
+  // Nombre comercial del producto analizado.
   nombreProducto: string
-  nombreProveedor: string
-  // Campo normalizado con el nombre oficial del laboratorio.
+  // Mejor precio devuelto por la API para ese producto.
+  mejorPrecio: number
+  // Proveedor ganador del analisis para ese producto.
+  proveedorGanador: string
+  // Cantidad de unidades reportadas como disponibles.
+  unidadesDisponibles: number
+  // Timestamp del analisis emitido por el backend.
+  analisisTimestamp: string
+  // Alias operativo para reutilizar vistas analiticas por laboratorio/proveedor.
   nombreLaboratorio: string
-  precioUnitario: number
 }
 
 export type DashboardKpis = {
@@ -20,9 +30,10 @@ export type KpiVariables = {
   totalRows: number
   uniqueProducts: number
   uniqueProviders: number
-  totalSavings: number
-  totalHighestPrice: number
-  savingsPercentage: number
+  totalBestPrice: number
+  averageBestPrice: number
+  totalUnitsAvailable: number
+  latestAnalysisTimestamp: string | null
 }
 
 export type KpiCardTone = 'green' | 'indigo' | 'rose'

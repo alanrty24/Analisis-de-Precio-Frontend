@@ -3,6 +3,7 @@ import { useDashboardStore } from '../store/dashboardStore'
 
 type LowestPriceRow = {
 	nombreProducto: string
+	proveedor: string
 	nombreLaboratorio: string
 	precioUnitario: number
 }
@@ -18,15 +19,16 @@ const LowestPriceProductsTable = () => {
 	const analysisItems = useDashboardStore((state) => state.analysisItems)
 
 	const topRows = useMemo<LowestPriceRow[]>(() => {
-		// Agrupamos por producto para conservar solo la mejor oferta de cada item unico.
+		// La API ya devuelve el mejor registro por producto, asi que solo ordenamos y deduplicamos por codigo_barra.
 		const bestByProduct = new Map<string, LowestPriceRow>()
 
 		analysisItems.forEach((item) => {
-			const productKey = `${item.codigoProducto}::${item.nombreProducto}`
+			const productKey = `${item.codigoBarra}::${item.nombreProducto}`
 			const candidate: LowestPriceRow = {
 				nombreProducto: item.nombreProducto,
-				nombreLaboratorio: item.nombreLaboratorio || item.nombreProveedor,
-				precioUnitario: item.precioUnitario,
+				proveedor: item.proveedorGanador,
+				nombreLaboratorio: item.nombreLaboratorio || item.proveedorGanador,
+				precioUnitario: item.mejorPrecio,
 			}
 
 			const current = bestByProduct.get(productKey)
@@ -82,20 +84,24 @@ const LowestPriceProductsTable = () => {
 								<tr>
 									<th className="w-12 px-3 py-2 text-left text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Item</th>
 									<th className="w-64 px-3 py-2 text-left text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Nombre del producto</th>
-									<th className="w-32 px-3 py-2 text-left text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Laboratorio</th>
+									<th className="w-32 px-3 py-2 text-left text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Proveedor</th>
+                                    <th className="w-32 px-3 py-2 text-left text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Laboratorio</th>
 									<th className="w-32 px-3 py-2 text-right text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Precio unitario</th>
 								</tr>
 							</thead>
 							<tbody>
 								{topRows.map((row, index) => (
-									<tr key={`${row.nombreProducto}-${row.nombreLaboratorio}-${row.precioUnitario}`}>
+									<tr key={`${row.nombreProducto}-${row.proveedor}-${row.nombreLaboratorio}-${row.precioUnitario}`}>
 										<td className="rounded-l-xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-700">
 											{index + 1}
 										</td>
 										<td className="whitespace-nowrap md:whitespace-pre-wrap border-y border-slate-200 bg-white px-3 py-3 text-sm font-medium text-slate-900">
 											{row.nombreProducto}
 										</td>
-										<td className="border-y border-slate-200 bg-white px-3 py-3 text-sm text-slate-700">
+										<td className="w-28 border-y border-slate-200 bg-white px-3 py-3 text-sm text-slate-700">
+											{row.proveedor}
+										</td>
+										<td className="w-32 border-y border-slate-200 bg-white px-3 py-3 text-sm text-slate-700">
 											{row.nombreLaboratorio}
 										</td>
 										<td className="rounded-r-xl border border-slate-200 bg-white px-3 py-3 text-right text-sm font-bold text-emerald-700">

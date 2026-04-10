@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import type { ChartData, ChartOptions } from 'chart.js'
+import type { ChartData, ChartOptions, TooltipItem } from 'chart.js'
 import BubbleChart from '../components/ui/BubbleChart'
 import ChartCard from '../components/ui/ChartCard'
 import { useDashboardStore } from '../store/dashboardStore'
@@ -23,7 +23,8 @@ const LaboratoryBubbleChart = () => {
   )
 
   const maxSavings = useMemo(
-    () => Math.max(...bubbleItems.map((item) => item.accumulatedSavings), 1),
+    // Usamos unidades disponibles para escalar el radio y reflejar peso operativo.
+    () => Math.max(...bubbleItems.map((item) => item.totalUnitsAvailable), 1),
     [bubbleItems],
   )
 
@@ -31,16 +32,16 @@ const LaboratoryBubbleChart = () => {
     return {
       datasets: [
         {
-          label: 'Laboratorios',
+          label: 'Top 10 laboratorios',
           data: bubbleItems.map((item) => ({
             // Eje X: cantidad de productos donde el laboratorio gana por menor precio.
             x: item.winningProducts,
             // Eje Y: precio promedio de esos productos ganadores.
             y: Number(item.averageWinningPrice.toFixed(2)),
-            // Radio: ahorro acumulado relativo para destacar impacto economico.
-            r: 8 + Math.round((item.accumulatedSavings / maxSavings) * 18),
+            // Radio: volumen disponible relativo para destacar impacto operativo.
+            r: 8 + Math.round((item.totalUnitsAvailable / maxSavings) * 18),
             nombreLaboratorio: item.nombreLaboratorio,
-            accumulatedSavings: item.accumulatedSavings,
+            totalUnitsAvailable: item.totalUnitsAvailable,
           })),
           backgroundColor: bubbleItems.map((_, index) => bubblePalette[index % bubblePalette.length]),
           borderColor: bubbleItems.map((_, index) => bubblePalette[index % bubblePalette.length].replace('0.60', '1')),
@@ -59,19 +60,24 @@ const LaboratoryBubbleChart = () => {
       },
       tooltip: {
         callbacks: {
-          label: (context) => {
+          title: (items: TooltipItem<'bubble'>[]) => {
+            // Show laboratorio name as title when hovering a point
+            const raw = items[0]?.raw as { nombreLaboratorio?: string } | undefined
+            return raw?.nombreLaboratorio ?? 'Laboratorio'
+          },
+          label: (context: TooltipItem<'bubble'>) => {
             const rawPoint = context.raw as {
               x: number
               y: number
               r: number
               nombreLaboratorio?: string
-              accumulatedSavings?: number
+              totalUnitsAvailable?: number
             }
 
-            const ahorro = rawPoint.accumulatedSavings ?? 0
-            const nombreLaboratorio = rawPoint.nombreLaboratorio ?? 'Laboratorio'
+            const unidades = rawPoint.totalUnitsAvailable ?? 0
+            const productos = rawPoint.x ?? 0
 
-            return `${nombreLaboratorio}: ${rawPoint.x} productos, precio prom. $${rawPoint.y.toFixed(2)}, ahorro $${ahorro.toFixed(2)}`
+            return `Productos: ${productos} · Precio prom.: ${rawPoint.y.toFixed(2)} · Unidades: ${unidades}`
           },
         },
       },

@@ -20,8 +20,8 @@ const ProviderCoverageDoughnutChart = () => {
     const counts = new Map<string, number>()
 
     analysisItems.forEach((item) => {
-      const current = counts.get(item.nombreProveedor) ?? 0
-      counts.set(item.nombreProveedor, current + 1)
+      const current = counts.get(item.proveedorGanador) ?? 0
+      counts.set(item.proveedorGanador, current + 1)
     })
 
     const entries = Array.from(counts.entries()).sort((a, b) => b[1] - a[1])

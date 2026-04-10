@@ -5,58 +5,61 @@ import { buildDashboardKpis, buildKpiVariables } from '../lib/kpiMapper'
 import type { AnalysisItem, DashboardKpis, KpiVariables } from '../lib/types'
 
 type DashboardState = {
-  selectedFile: File | null
+  selectedFiles: File[]
   isLoading: boolean
   error: string | null
   analysisItems: AnalysisItem[]
   kpis: DashboardKpis
   kpiVariables: KpiVariables
-  setSelectedFile: (file: File | null) => void
+  setSelectedFiles: (files: File[]) => void
   analyzeSelectedFile: () => Promise<void>
+  resetAnalysis: () => void
 }
 
 const defaultKpis: DashboardKpis = {
-  bestPriceSavings: 12450,
-  bestPriceDeltaLabel: '14.2% vs. Last Quarter',
-  cheapestProductName: 'Motor Electrico X-1',
-  cheapestProductUnitPrice: 450,
-  providerCount: 8,
-  providerTags: ['V1', 'V2', 'V3'],
+  bestPriceSavings: 0,
+  bestPriceDeltaLabel: 'Sin analisis disponible',
+  cheapestProductName: 'Sin producto identificado',
+  cheapestProductUnitPrice: 0,
+  providerCount: 0,
+  providerTags: [],
 }
 
 const defaultKpiVariables: KpiVariables = {
   totalRows: 0,
   uniqueProducts: 0,
   uniqueProviders: 0,
-  totalSavings: 0,
-  totalHighestPrice: 0,
-  savingsPercentage: 0,
+  totalBestPrice: 0,
+  averageBestPrice: 0,
+  totalUnitsAvailable: 0,
+  latestAnalysisTimestamp: null,
 }
 
 export const useDashboardStore = create<DashboardState>()(
   persist(
     (set, get) => ({
-      selectedFile: null,
+      selectedFiles: [],
       isLoading: false,
       error: null,
       analysisItems: [],
       kpis: defaultKpis,
       kpiVariables: defaultKpiVariables,
-      setSelectedFile: (file) => {
-        set({ selectedFile: file, error: null })
+      setSelectedFiles: (files) => {
+        // No persistimos File[] porque localStorage no puede serializarlos de forma útil.
+        set({ selectedFiles: files, error: null })
       },
       analyzeSelectedFile: async () => {
-        const currentFile = get().selectedFile
+        const currentFiles = get().selectedFiles
 
-        if (!currentFile) {
-          set({ error: 'Selecciona un archivo antes de analizar.' })
+        if (currentFiles.length === 0) {
+          set({ error: 'Selecciona al menos un archivo antes de analizar.' })
           return
         }
 
         set({ isLoading: true, error: null })
 
         try {
-          const items = await requestAnalysisItems(currentFile)
+          const items = await requestAnalysisItems(currentFiles)
           const kpis = buildDashboardKpis(items)
           const kpiVariables = buildKpiVariables(items)
 
@@ -75,6 +78,22 @@ export const useDashboardStore = create<DashboardState>()(
                 : 'No fue posible procesar el archivo con la API.',
           })
         }
+      },
+      resetAnalysis: () => {
+        try {
+          localStorage.removeItem('apu-dashboard-storage')
+        } catch (e) {
+          // ignorar errores de acceso a localStorage
+        }
+
+        set({
+          selectedFiles: [],
+          isLoading: false,
+          error: null,
+          analysisItems: [],
+          kpis: defaultKpis,
+          kpiVariables: defaultKpiVariables,
+        })
       },
     }),
     {
